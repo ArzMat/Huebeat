@@ -1,10 +1,42 @@
-# huebeat
+<p align="center">
+  <img src="assets/huebeat-icon.png" width="112" alt="Huebeat icon">
+</p>
 
-Real-time music sync for Philips Hue lights on Windows. huebeat captures the
-system audio (or a single app), analyses it (beats, bass, vocals) and drives the
-lights through the Hue Entertainment API over a local DTLS stream at up to 60 Hz.
-It was built to do better than Hue Sync desktop: faster reactions and colour
-choices that follow the music.
+<h1 align="center">Huebeat</h1>
+
+<p align="center">
+  <b>Real-time music sync for Philips Hue lights on Windows.</b>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?logo=windows&logoColor=white" alt="Windows 10 and 11">
+  <img src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white" alt="Python 3.12">
+  <img src="https://img.shields.io/badge/Philips%20Hue-Entertainment%20API-0065D3?logo=philipshue&logoColor=white" alt="Philips Hue Entertainment API">
+  <img src="https://img.shields.io/badge/stream-up%20to%2060%20Hz-2FE66E" alt="Up to 60 Hz">
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license">
+</p>
+
+Huebeat captures the system audio (or a single app), analyses it (beats, bass,
+vocals) and drives the lights through the Hue Entertainment API over a local
+DTLS stream at up to 60 Hz. It was built to do better than Hue Sync desktop:
+faster reactions and colour choices that follow the music.
+
+<p align="center">
+  <img src="assets/huebeat-panel.png" width="800" alt="Huebeat control panel">
+  <br>
+  <sub>The control panel (sample data): live levels and BPM, effect presets, now playing with the cover palette, live tuning knobs. The UI is in Italian.</sub>
+</p>
+
+## How it works
+
+```mermaid
+flowchart LR
+    audio["Audio capture<br>WASAPI loopback<br>or a single app"] --> analysis["Analysis<br>onsets, beats, BPM,<br>bands, voice"]
+    analysis --> effects["Effects engine<br>presets, channel roles"]
+    spotify["Spotify cover<br>(optional)"] -. "palette" .-> effects
+    panel["Control panel"] <--> effects
+    effects --> dtls["DTLS stream<br>up to 60 Hz"] --> bridge["Hue Bridge(s)"]
+```
 
 ## Features
 
@@ -71,7 +103,7 @@ executable with PyInstaller.
 - `native/hb_loopback/`: small C++ helper that captures the audio of a single
   process with the Windows Process Loopback API, based on Microsoft's MIT
   licensed ApplicationLoopback sample
-- `assets/`: icon
+- `assets/`: icon and README images
 
 ## License
 
