@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "huebeat"
 version = "0.1.0"
 description = "Sync musica-luci Philips Hue in tempo reale via Entertainment API"
-requires-python = ">=3.14"
+requires-python = ">=3.15"
 dependencies = [
     "pydantic-settings>=2.2",
     "httpx",
@@ -38,7 +38,7 @@ huebeat = ["webui/*.html"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py314"
+target-version = "py315"
 
 [tool.ruff.lint]
 select = [

@@ -10,7 +10,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?logo=windows&logoColor=white" alt="Windows 10 and 11">
-  <img src="https://img.shields.io/badge/Python-3.14%2B-3776AB?logo=python&logoColor=white" alt="Python 3.14+">
+  <img src="https://img.shields.io/badge/Python-3.15%2B-3776AB?logo=python&logoColor=white" alt="Python 3.15+">
   <img src="https://img.shields.io/badge/Philips%20Hue-Entertainment%20API-0065D3?logo=philipshue&logoColor=white" alt="Philips Hue Entertainment API">
   <img src="https://img.shields.io/badge/stream-up%20to%2060%20Hz-2FE66E" alt="Up to 60 Hz">
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license">
@@ -67,12 +67,12 @@ flowchart LR
 - WebView2 runtime (already present on Windows 11)
 - Hue Bridge v2 (square) on the same network, with an entertainment area
   created in the Hue app
-- Python 3.14 or later to run from source
+- Python 3.15 or later to run from source
 
 ## Run from source
 
 ```powershell
-py -3.14 -m venv .venv
+py -3.15 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e .
 .\.venv\Scripts\python.exe -m huebeat pair   # first time: press the bridge button
 .\.venv\Scripts\python.exe -m huebeat app    # control panel
