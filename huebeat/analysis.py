@@ -513,7 +513,7 @@ class FeatureAnalyzer:
         """
         self._agc_hold = hold
 
-    def process(self, block: "np.ndarray") -> AudioFeatures:
+    def process(self, block: np.ndarray) -> AudioFeatures:
         """Elabora un blocco audio e restituisce le feature estratte.
 
         Args:
@@ -660,7 +660,7 @@ class FeatureAnalyzer:
         self._warmth += (raw - self._warmth) * self._warmth_coeff
         return float(min(max(self._warmth, -1.0), 1.0))
 
-    def _process_section_energy(self, block: "np.ndarray") -> float:
+    def _process_section_energy(self, block: np.ndarray) -> float:
         """Aggiorna e restituisce l'energia di sezione del blocco corrente.
 
         Liscia l'energia media del blocco (tempo caratteristico

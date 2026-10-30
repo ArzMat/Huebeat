@@ -1,8 +1,12 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "huebeat"
 version = "0.1.0"
 description = "Sync musica-luci Philips Hue in tempo reale via Entertainment API"
-requires-python = ">=3.12,<3.13"
+requires-python = ">=3.14"
 dependencies = [
     "pydantic-settings>=2.2",
     "httpx",
@@ -24,9 +28,17 @@ dependencies = [
     "psutil",
 ]
 
+# Il repo ha altre cartelle in radice (native, assets, scripts): senza questa
+# scelta esplicita la discovery flat-layout di setuptools fa fallire l'install.
+[tool.setuptools.packages.find]
+include = ["huebeat*"]
+
+[tool.setuptools.package-data]
+huebeat = ["webui/*.html"]
+
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py314"
 
 [tool.ruff.lint]
 select = [

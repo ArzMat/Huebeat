@@ -223,7 +223,7 @@ class BridgeClient:
             },
         )
 
-    def __enter__(self) -> "BridgeClient":
+    def __enter__(self) -> BridgeClient:
         """Restituisce l'istanza per l'uso come context manager."""
         return self
 

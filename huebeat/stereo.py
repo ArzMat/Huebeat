@@ -114,7 +114,7 @@ class StereoAnalyzer:
         self._pan_mid: float = 0.0
         self._pan_high: float = 0.0
 
-    def process(self, stereo_block: "np.ndarray | None") -> StereoImage:
+    def process(self, stereo_block: np.ndarray | None) -> StereoImage:
         """Aggiorna il panning per banda con il blocco stereo corrente.
 
         Args:

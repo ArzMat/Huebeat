@@ -128,7 +128,7 @@ class WaterfallEffect:
         self._palette = palette
 
     def render(
-        self, features: AudioFeatures, beat: "BeatInfo | None" = None
+        self, features: AudioFeatures, beat: BeatInfo | None = None
     ) -> list[tuple[int, tuple[float, float, float]]]:
         """Produce i colori di un frame facendo scorrere la storia dei colpi.
 

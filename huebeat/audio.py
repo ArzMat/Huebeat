@@ -159,7 +159,7 @@ class LoopbackCapture:
         """
         self._pending_device_name = device_name
 
-    def __enter__(self) -> "LoopbackCapture":
+    def __enter__(self) -> LoopbackCapture:
         """Apre PyAudio e lo stream loopback sul device risolto.
 
         Returns:

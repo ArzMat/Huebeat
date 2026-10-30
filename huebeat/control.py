@@ -216,8 +216,8 @@ class ControlServer:
         bus: ControlBus,
         port: int = DEFAULT_PORT,
         persisted: dict | None = None,
-        pairing: "PairingManager | None" = None,
-        spotify_link: "SpotifyLinkManager | None" = None,
+        pairing: PairingManager | None = None,
+        spotify_link: SpotifyLinkManager | None = None,
     ) -> None:
         """Prepara il server senza avviarlo.
 
@@ -703,7 +703,7 @@ class ControlServer:
         return {"bridges": result}
 
     @staticmethod
-    def _list_areas(creds: "bridgestore.BridgeCredentials") -> tuple[list[dict], str]:
+    def _list_areas(creds: bridgestore.BridgeCredentials) -> tuple[list[dict], str]:
         """Elenca le entertainment area di un bridge (best-effort).
 
         Args:

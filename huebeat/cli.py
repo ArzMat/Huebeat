@@ -201,7 +201,7 @@ def _sweep_entries(
     return entries
 
 
-def _maybe_start_spotify_poller() -> "object | None":
+def _maybe_start_spotify_poller() -> object | None:
     """Avvia il poller Spotify se configurato e autenticato, altrimenti None.
 
     Se `spotify_client_id` non e' impostato, l'integrazione Spotify e' disattiva
@@ -854,7 +854,7 @@ def _lights_payload(
     ]
 
 
-def run_engine(bus: "object", stop_event: threading.Event) -> None:
+def run_engine(bus: object, stop_event: threading.Event) -> None:
     """Avvia il motore proteggendolo col lock di istanza singola.
 
     Prende il lock in `paths.data_dir()` PRIMA di toccare qualsiasi bridge: se
@@ -882,7 +882,7 @@ def run_engine(bus: "object", stop_event: threading.Event) -> None:
         _release_engine_lock(lock_handle)
 
 
-def _run_engine_locked(bus: "object", stop_event: threading.Event) -> None:
+def _run_engine_locked(bus: object, stop_event: threading.Event) -> None:
     """Loop realtime di sync: audio -> analisi -> effetto -> Bridge.
 
     Estratto da cmd_run per essere riusabile dall'app desktop (che lo esegue

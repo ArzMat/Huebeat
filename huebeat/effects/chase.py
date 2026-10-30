@@ -111,7 +111,7 @@ class ChaseEffect:
         self._palette = palette
 
     def render(
-        self, features: AudioFeatures, beat: "BeatInfo | None" = None
+        self, features: AudioFeatures, beat: BeatInfo | None = None
     ) -> list[tuple[int, tuple[float, float, float]]]:
         """Produce i colori di un frame a partire dalle feature audio.
 

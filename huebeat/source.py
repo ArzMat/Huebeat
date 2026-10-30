@@ -48,7 +48,7 @@ class AudioSource:
         self._block_size = block_size
         self._capture: LoopbackCapture | ProcessCapture | None = None
 
-    def __enter__(self) -> "AudioSource":
+    def __enter__(self) -> AudioSource:
         """Apre la cattura iniziale (con fallback al device di default).
 
         Se la sorgente per-processo non e' apribile (helper nativo mancante),
@@ -111,7 +111,7 @@ class AudioSource:
         return self._capture.device_display_name  # type: ignore[union-attr]
 
     @property
-    def last_stereo(self) -> "np.ndarray | None":
+    def last_stereo(self) -> np.ndarray | None:
         """Ultimo blocco stereo PRE-downmix della cattura corrente.
 
         Percorso PARALLELO al mono: delega alla cattura attiva.

@@ -165,7 +165,7 @@ class AdaptiveEffect:
         return hits / (window / FRAME_RATE_HZ)
 
     def render(
-        self, features: AudioFeatures, beat: "BeatInfo | None" = None
+        self, features: AudioFeatures, beat: BeatInfo | None = None
     ) -> list[tuple[int, tuple[float, float, float]]]:
         """Aggiorna il regime e delega il rendering all'effetto attivo.
 

@@ -104,7 +104,7 @@ class AutoEffect:
         self._spectrum.set_stereo(image)
 
     def render(
-        self, features: AudioFeatures, beat: "BeatInfo | None" = None
+        self, features: AudioFeatures, beat: BeatInfo | None = None
     ) -> list[tuple[int, tuple[float, float, float]]]:
         """Aggiorna la modalita' e delega il rendering all'effetto attivo.
 

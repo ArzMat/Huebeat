@@ -10,7 +10,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?logo=windows&logoColor=white" alt="Windows 10 and 11">
-  <img src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white" alt="Python 3.12">
+  <img src="https://img.shields.io/badge/Python-3.14%2B-3776AB?logo=python&logoColor=white" alt="Python 3.14+">
   <img src="https://img.shields.io/badge/Philips%20Hue-Entertainment%20API-0065D3?logo=philipshue&logoColor=white" alt="Philips Hue Entertainment API">
   <img src="https://img.shields.io/badge/stream-up%20to%2060%20Hz-2FE66E" alt="Up to 60 Hz">
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license">
@@ -24,7 +24,7 @@ faster reactions and colour choices that follow the music.
 <p align="center">
   <img src="assets/huebeat-panel.png" width="800" alt="Huebeat control panel">
   <br>
-  <sub>The control panel (sample data): live levels and BPM, effect presets, now playing with the cover palette, live tuning knobs. The UI is in Italian.</sub>
+  <sub>The control panel (sample data): live levels and BPM, effect presets, now playing with the track palette, live tuning knobs. The UI is in Italian.</sub>
 </p>
 
 ## How it works
@@ -33,7 +33,7 @@ faster reactions and colour choices that follow the music.
 flowchart LR
     audio["Audio capture<br>WASAPI loopback<br>or a single app"] --> analysis["Analysis<br>onsets, beats, BPM,<br>bands, voice"]
     analysis --> effects["Effects engine<br>presets, channel roles"]
-    spotify["Spotify cover<br>(optional)"] -. "palette" .-> effects
+    spotify["Spotify track<br>(optional)"] -. "palette" .-> effects
     panel["Control panel"] <--> effects
     effects --> dtls["DTLS stream<br>up to 60 Hz"] --> bridge["Hue Bridge(s)"]
 ```
@@ -53,9 +53,10 @@ flowchart LR
   `high`, `voice`, or automatic spatial distribution (left = bass, centre =
   mids, right = highs). Gradient lights are driven per segment.
 - **Multi-bridge**: one entertainment area per bridge, several bridges at once.
-- **Spotify (optional)**: a colour palette generated from each track's cover,
-  with crossfade on track change and playback controls (PKCE login with your
-  own client id, Premium needed for the controls).
+- **Spotify (optional)**: a colour palette generated for each track (the same
+  song always gets the same colours), with crossfade on track change and
+  playback controls (PKCE login with your own client id, Premium needed for
+  the controls).
 - **Desktop app**: control panel in a native window with live tuning knobs,
   global hotkey to pause the lights, tray icon and start with Windows.
 
@@ -66,12 +67,12 @@ flowchart LR
 - WebView2 runtime (already present on Windows 11)
 - Hue Bridge v2 (square) on the same network, with an entertainment area
   created in the Hue app
-- Python 3.12 to run from source
+- Python 3.14 or later to run from source
 
 ## Run from source
 
 ```powershell
-py -3.12 -m venv .venv
+py -3.14 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e .
 .\.venv\Scripts\python.exe -m huebeat pair   # first time: press the bridge button
 .\.venv\Scripts\python.exe -m huebeat app    # control panel

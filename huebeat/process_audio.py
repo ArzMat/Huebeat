@@ -393,7 +393,7 @@ class ProcessCapture:
             return
         self._pending_process_name = process_name
 
-    def __enter__(self) -> "ProcessCapture":
+    def __enter__(self) -> ProcessCapture:
         """Verifica l'helper su disco e prepara la cattura.
 
         L'helper vero viene avviato pigramente da `read_block` quando l'app

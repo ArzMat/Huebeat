@@ -445,11 +445,11 @@ class SpotifyAuth:
 # Registro di modulo delle istanze SpotifyAuth per file di token: una sola
 # istanza per percorso, condivisa tra poller e server di controllo, cosi' non
 # convivono due autenticatori che rinnovano e riscrivono lo stesso file.
-_auth_registry: dict[Path, "SpotifyAuth"] = {}
+_auth_registry: dict[Path, SpotifyAuth] = {}
 _auth_registry_lock = threading.Lock()
 
 
-def get_auth(client_id: str, cache_path: Path) -> "SpotifyAuth":
+def get_auth(client_id: str, cache_path: Path) -> SpotifyAuth:
     """Restituisce l'istanza SpotifyAuth condivisa per un file di token.
 
     Mantiene una sola istanza per `cache_path` (registro di modulo protetto da

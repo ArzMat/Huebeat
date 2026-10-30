@@ -219,7 +219,7 @@ class SpectrumPunchEffect:
         self._stereo = image
 
     def render(
-        self, features: AudioFeatures, beat: "BeatInfo | None" = None
+        self, features: AudioFeatures, beat: BeatInfo | None = None
     ) -> list[tuple[int, tuple[float, float, float]]]:
         """Produce i colori di un frame a partire dalle feature audio.
 
