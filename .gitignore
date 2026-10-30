@@ -1,0 +1,15 @@
+.env
+config.local.toml
+secrets/
+__pycache__/
+.venv/
+*.pyc
+.DS_Store
+*.egg-info/
+dist/
+build/
+.ruff_cache/
+.pytest_cache/
+.spotify_tokens.json
+.bridges.json
+*.spec

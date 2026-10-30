@@ -1,0 +1,39 @@
+[project]
+name = "huebeat"
+version = "0.1.0"
+description = "Sync musica-luci Philips Hue in tempo reale via Entertainment API"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "pydantic-settings>=2.2",
+    "httpx",
+    # Primitive AES-GCM/HMAC del trasporto DTLS interno (huebeat/dtls.py);
+    # sostituisce python-mbedtls, rotta dal firmware bridge 1.79.
+    "cryptography>=42",
+    "PyAudioWPatch",
+    "numpy",
+    "keyboard",
+    # Frontend di controllo (comando `app`): finestra nativa e tray.
+    "pywebview>=5",
+    "pystray",
+    "Pillow",  # richiesta da pystray per l'icona
+    # Cattura per-processo: enumerazione delle sessioni audio (PID + nome app).
+    "pycaw",
+    # Risoluzione del PID radice (risalita ai genitori) per l'aggancio dell'helper
+    # all'intero albero di processi dell'app (Chrome). Gia' trascinata da pycaw,
+    # qui dichiarata perche' usata direttamente (process_audio.resolve_pid).
+    "psutil",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",   # errori PEP8
+    "F",   # pyflakes (variabili/import non usati)
+    "W",   # warnings
+    "I",   # ordinamento import
+    "B",   # bugbear (anti-pattern)
+    "UP",  # pyupgrade (sintassi moderna)
+]

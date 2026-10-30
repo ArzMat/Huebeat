@@ -1,0 +1,25 @@
+# Configurazione huebeat - solo parametri NON sensibili (i secrets stanno in .env)
+
+bridge_host = ""          # IP del Bridge Hue; vuoto = auto-discovery
+entertainment_area = ""   # nome dell'entertainment area; vuoto = prima disponibile
+stream_fps = 60           # frequenza streaming Entertainment (10-60)
+audio_device = ""         # device WASAPI da catturare; vuoto = loopback dell'output di default
+audio_block_size = 1024   # campioni per blocco di analisi
+invert_x = false          # specchia sinistra/destra dell'effetto (se le posizioni nell'app Hue sono invertite)
+effect = "adaptive"       # spectrum (spettro spaziale + punch) | chase (flash che corre)
+                          # | pulse (l'area respira sul beat) | auto (pulse quieto / spectrum carico)
+                          # | waterfall (i colpi scorrono lungo la striscia)
+                          # | adaptive (tre regimi: pulse in calma, spectrum sul ritmo
+                          #   normale, waterfall sulle raffiche dei drop veloci)
+log_level = "INFO"        # DEBUG | INFO | WARNING | ERROR
+toggle_hotkey = "ctrl+shift+a"  # hotkey globale sospendi/riattiva luci in run; vuota = off
+
+# Ruoli forzati per canale (opzionale): channel_id = "bass" | "mid" | "high" | "rest"
+# | "voice" ("rest" = tutto tranne i bassi; "voice" = presenza vocale stimata,
+# euristica tier 1). I canali non elencati seguono la distribuzione
+# spaziale automatica (sinistra=bassi, centro=medi, destra=alti). Solo spectrum li usa.
+# Esempio: bassi sui canali 4-10, tutto il resto sugli altri. I valori propri
+# vanno in config.local.toml (generato dal pannello, ignorato da git).
+# [channel_roles]
+# 4 = "bass"
+# 0 = "rest"
