@@ -16,15 +16,19 @@ di rendering gira nel thread di lavoro e comunica solo via ControlBus.
 """
 
 import argparse
+import ctypes
 import logging
 import sys
 import threading
 import time
+from http import HTTPStatus
 from pathlib import Path
+
+import httpx
 
 from huebeat import paths, tuning
 from huebeat.config import settings
-from huebeat.control import BIND_HOST, ControlBus, ControlServer
+from huebeat.control import BIND_HOST, DEFAULT_PORT, ControlBus, ControlServer
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +40,11 @@ STRIP_SIZE = (400, 660)
 # massima per richiesta e altezza minima di sicurezza (px fisici).
 FIT_MAX_DELTA_PX = 500
 FIT_MIN_HEIGHT_PX = 400
+
+# Secondo avvio a porta occupata: attesa massima della risposta di chi ascolta
+# e icona di errore del message box di Windows (MB_ICONERROR).
+RUNNING_INSTANCE_TIMEOUT_SECONDS = 3.0
+MESSAGE_BOX_ICON_ERROR = 0x10
 
 # Avvio automatico: chiave Run per-utente (niente privilegi amministrativi).
 AUTOSTART_REG_PATH = r"Software\Microsoft\Windows\CurrentVersion\Run"
@@ -301,6 +310,75 @@ def _tray_icon_image():
     return image
 
 
+def _ask_running_instance_to_show(port: int) -> int | None:
+    """Chiede a chi ascolta sulla porta di mostrare la finestra di huebeat.
+
+    Args:
+        port: La porta di controllo occupata.
+
+    Returns:
+        Lo status HTTP della risposta, None se non risponde nessuno.
+    """
+    try:
+        response = httpx.post(
+            f"http://{BIND_HOST}:{port}/api/window",
+            json={"action": "show"},
+            timeout=RUNNING_INSTANCE_TIMEOUT_SECONDS,
+            trust_env=False,
+        )
+    except httpx.HTTPError:
+        return None
+    return response.status_code
+
+
+def _show_error(message: str) -> None:
+    """Mostra un errore bloccante: l'exe non ha console su cui scriverlo."""
+    ctypes.windll.user32.MessageBoxW(None, message, APP_TITLE, MESSAGE_BOX_ICON_ERROR)
+
+
+def _handle_busy_port(port: int) -> int:
+    """Gestisce il secondo avvio: la porta di controllo e' gia' occupata.
+
+    Occupata non vuol dire huebeat (il server rifiuta il riuso dell'indirizzo
+    apposta, ma la porta puo' essere di un altro programma), quindi prima si
+    chiede a chi risponde. Un'istanza viva mostra la SUA finestra: una seconda
+    finestra agganciata al suo server resterebbe orfana alla sua chiusura.
+
+    Args:
+        port: La porta di controllo occupata.
+
+    Returns:
+        Exit code del comando.
+    """
+    status = _ask_running_instance_to_show(port)
+    if status == HTTPStatus.OK:
+        logger.info("huebeat e' gia' in esecuzione: mostro la sua finestra.")
+        return 0
+    if status == HTTPStatus.NOT_IMPLEMENTED:
+        # Istanza senza finestra propria (comando `run`): qui una finestra
+        # agganciata e' l'unico modo di avere la UI. Cornice nativa (non
+        # frameless): i bottoni finestra della UI non hanno chi comandare.
+        import webview
+
+        logger.info("huebeat gira senza finestra: apro la UI sul suo server.")
+        webview.create_window(
+            APP_TITLE,
+            f"http://{BIND_HOST}:{port}/",
+            width=CONSOLE_SIZE[0],
+            height=CONSOLE_SIZE[1],
+            frameless=False,
+            background_color="#0B0B0F",
+        )
+        webview.start()
+        return 0
+    logger.error("Porta di controllo %d occupata da un altro programma (status %s).", port, status)
+    _show_error(
+        f"La porta {port} e' occupata da un altro programma e huebeat non puo' partire.\n"
+        "Chiudi quel programma o cambia control_port nella configurazione."
+    )
+    return 1
+
+
 def cmd_app(args: argparse.Namespace) -> int:
     """Avvia l'app desktop: server di controllo, motore, finestra e tray.
 
@@ -366,7 +444,7 @@ def cmd_app(args: argparse.Namespace) -> int:
     spotify_link = SpotifyLinkManager()
     spotify_link.on_linked = _power_cycle
 
-    port = settings.control_port or 8765
+    port = settings.control_port or DEFAULT_PORT
     server = ControlServer(
         bus,
         port,
@@ -377,26 +455,7 @@ def cmd_app(args: argparse.Namespace) -> int:
     try:
         server.start()
     except OSError:
-        # Porta occupata: un'altra istanza di huebeat e' gia' viva (il server
-        # rifiuta il riuso dell'indirizzo apposta). Invece di duplicare motore
-        # e tray, apri solo una finestra sull'istanza esistente.
-        logger.warning(
-            "Porta %d occupata: huebeat e' gia' in esecuzione, apro la finestra "
-            "sull'istanza esistente.",
-            port,
-        )
-        # Cornice nativa (non frameless): i bottoni finestra della UI
-        # comandano la finestra dell'ALTRA istanza, quindi serve la X vera.
-        webview.create_window(
-            APP_TITLE,
-            f"http://{BIND_HOST}:{port}/",
-            width=CONSOLE_SIZE[0],
-            height=CONSOLE_SIZE[1],
-            frameless=False,
-            background_color="#0B0B0F",
-        )
-        webview.start()
-        return 0
+        return _handle_busy_port(port)
 
     window = webview.create_window(
         APP_TITLE,
@@ -417,6 +476,9 @@ def cmd_app(args: argparse.Namespace) -> int:
         """Comandi finestra dalla UI (eseguiti nel thread del server)."""
         if action == "minimize":
             window.minimize()
+        elif action == "show":
+            window.show()
+            window.restore()
         elif action == "close":
             window.hide()  # resta in tray; uscita vera dal menu tray
         elif action == "view:strip":

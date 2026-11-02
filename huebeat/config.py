@@ -122,7 +122,7 @@ class Settings(BaseSettings):
     toggle_hotkey: str = ""
     # Porta TCP del server di controllo del frontend (bind su 127.0.0.1);
     # 0 = server disattivato (run torna al comportamento senza frontend).
-    control_port: int = Field(8765, ge=0, le=65535)
+    control_port: int = Field(8775, ge=0, le=65535)
     # Knob di tuning persistiti (sezione [tuning] in config.local.toml,
     # scritta dal frontend; default = costanti storiche dei moduli).
     tuning: TuningSettings = TuningSettings()

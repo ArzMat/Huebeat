@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 # essere raggiungibile dalla LAN.
 BIND_HOST = "127.0.0.1"
 # Porta di default del server di controllo (override: control_port in config).
-DEFAULT_PORT = 8765
+DEFAULT_PORT = 8775
 # Periodo di push dello snapshot via SSE (secondi): ~10 Hz, letto dal dict
 # pubblicato dal loop senza mai toccarne il thread.
 SSE_INTERVAL_SECONDS = 0.1
@@ -85,8 +85,8 @@ class _QuietHTTPServer(ThreadingHTTPServer):
     # NIENTE riuso dell'indirizzo: su Windows SO_REUSEADDR permette a una
     # seconda istanza di bindarsi sulla porta di un'istanza viva (e le
     # richieste finiscono a una delle due, imprevedibile: visto sul campo).
-    # Con False la seconda istanza riceve un bind error e lo gestisce come
-    # "huebeat e' gia' in esecuzione".
+    # Con False la seconda istanza riceve un bind error e chiede a chi ascolta
+    # sulla porta se e' un huebeat (app._handle_busy_port).
     allow_reuse_address = False
 
     def handle_error(self, request: object, client_address: object) -> None:
@@ -198,7 +198,7 @@ class ControlServer:
                             ("" = spaziale; i ruoli valgono per QUEL bridge)
     - POST /api/hotkey      {"hotkey": "ctrl+shift+a"}
     - POST /api/autostart   {"enabled": true|false}
-    - POST /api/window      {"action": "minimize"|"close"|"view:strip"|"view:console"}
+    - POST /api/window      {"action": "minimize"|"show"|"close"|"view:strip"|"view:console"}
     - POST /api/pair/discover   {} (cerca il Bridge sulla LAN)
     - POST /api/pair/start      {"host": "..."} ("" = usa quello scoperto)
     - POST /api/spotify/client_id {"client_id": "..."}
@@ -855,7 +855,7 @@ def _build_handler(server: ControlServer) -> type[BaseHTTPRequestHandler]:
                     self.wfile.write(f"data: {payload}\n\n".encode())
                     self.wfile.flush()
                     time.sleep(SSE_INTERVAL_SECONDS)
-            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+            except BrokenPipeError, ConnectionResetError, ConnectionAbortedError:
                 return  # client andato via: normale
 
         def do_POST(self) -> None:  # noqa: N802 - firma imposta da BaseHTTPRequestHandler
