@@ -23,6 +23,7 @@ import threading
 import time
 from http import HTTPStatus
 from pathlib import Path
+from typing import Any
 
 import httpx
 
@@ -379,6 +380,98 @@ def _handle_busy_port(port: int) -> int:
     return 1
 
 
+class WindowController:
+    """Esegue i comandi alla finestra nativa, ricordando se e' nascosta.
+
+    Il resize di pywebview su Windows passa SWP_SHOWWINDOW a SetWindowPos: su una
+    finestra nascosta la farebbe comparire. Da nascosta quindi niente resize: la
+    UI si rimisura quando la finestra torna visibile.
+    """
+
+    def __init__(self, window: Any, *, hidden: bool) -> None:
+        """Prepara il controller.
+
+        Args:
+            window: La finestra di pywebview.
+            hidden: True se la finestra parte nascosta nella tray.
+        """
+        self._window = window
+        self._hidden = hidden
+        # Dimensione corrente della vista: base per l'adattamento al contenuto
+        # (azione "fit:<delta>" dalla UI, che misura il proprio scrollHeight).
+        self._width, self._height = CONSOLE_SIZE
+
+    def handle(self, action: str) -> None:
+        """Esegue un comando finestra (dal thread del server o della tray).
+
+        Args:
+            action: Una delle azioni di POST /api/window.
+        """
+        if action == "minimize":
+            self._window.minimize()
+        elif action == "show":
+            self._show()
+        elif action == "close":
+            self._hidden = True
+            self._window.hide()  # resta in tray; uscita vera dal menu tray
+        elif action == "view:strip":
+            self._set_view(STRIP_SIZE)
+        elif action == "view:console":
+            self._set_view(CONSOLE_SIZE)
+        elif action.startswith("fit:"):
+            self._fit(action)
+        else:
+            logger.warning("Azione finestra sconosciuta: %r", action)
+
+    def _show(self) -> None:
+        """Mostra la finestra e chiede alla UI di rimisurarsi."""
+        self._hidden = False
+        self._window.show()
+        self._window.restore()
+        # In un thread: evaluate_js attende il caricamento della pagina e il
+        # chiamante (server o tray) non deve restare appeso.
+        threading.Thread(target=self._request_fit, name="window-refit", daemon=True).start()
+
+    def _request_fit(self) -> None:
+        """Fa ripartire l'adattamento al contenuto dalla UI."""
+        try:
+            self._window.evaluate_js("scheduleFit()")
+        except Exception:  # noqa: BLE001 - e' un ritocco estetico, mai bloccante
+            logger.warning("Adattamento della finestra non riuscito.", exc_info=True)
+
+    def _set_view(self, size: tuple[int, int]) -> None:
+        """Passa alla dimensione base di una vista, se la finestra e' visibile."""
+        if self._hidden:
+            return
+        self._width, self._height = size
+        self._window.resize(*size)
+
+    def _fit(self, action: str) -> None:
+        """Adatta l'altezza al contenuto, se la finestra e' visibile.
+
+        La UI chiede di crescere/stringersi di delta pixel FISICI (gia'
+        moltiplicati per il devicePixelRatio): la finestra si adatta al
+        contenuto e la barra di scorrimento sparisce, con qualsiasi scaling di
+        Windows.
+        """
+        if self._hidden:
+            return
+        try:
+            delta = int(action.split(":", 1)[1])
+        except ValueError:
+            logger.warning("Delta fit non numerico: %r", action)
+            return
+        delta = max(-FIT_MAX_DELTA_PX, min(FIT_MAX_DELTA_PX, delta))
+        self._height = max(FIT_MIN_HEIGHT_PX, self._height + delta)
+        self._window.resize(self._width, self._height)
+        logger.info(
+            "Finestra adattata al contenuto: %+d px -> %dx%d.",
+            delta,
+            self._width,
+            self._height,
+        )
+
+
 def cmd_app(args: argparse.Namespace) -> int:
     """Avvia l'app desktop: server di controllo, motore, finestra e tray.
 
@@ -457,6 +550,7 @@ def cmd_app(args: argparse.Namespace) -> int:
     except OSError:
         return _handle_busy_port(port)
 
+    start_hidden = bool(getattr(args, "tray", False))
     window = webview.create_window(
         APP_TITLE,
         f"http://{BIND_HOST}:{port}/",
@@ -464,52 +558,12 @@ def cmd_app(args: argparse.Namespace) -> int:
         height=CONSOLE_SIZE[1],
         frameless=True,
         easy_drag=False,
-        hidden=bool(getattr(args, "tray", False)),
+        hidden=start_hidden,
         background_color="#0B0B0F",
     )
 
-    # Dimensione corrente della vista: base per l'adattamento al contenuto
-    # (azione "fit:<delta>" dalla UI, che misura il proprio scrollHeight).
-    view_size = {"width": CONSOLE_SIZE[0], "height": CONSOLE_SIZE[1]}
-
-    def _on_window(action: str) -> None:
-        """Comandi finestra dalla UI (eseguiti nel thread del server)."""
-        if action == "minimize":
-            window.minimize()
-        elif action == "show":
-            window.show()
-            window.restore()
-        elif action == "close":
-            window.hide()  # resta in tray; uscita vera dal menu tray
-        elif action == "view:strip":
-            view_size["width"], view_size["height"] = STRIP_SIZE
-            window.resize(*STRIP_SIZE)
-        elif action == "view:console":
-            view_size["width"], view_size["height"] = CONSOLE_SIZE
-            window.resize(*CONSOLE_SIZE)
-        elif action.startswith("fit:"):
-            # La UI chiede di crescere/stringersi di delta pixel FISICI (gia'
-            # moltiplicati per il devicePixelRatio): la finestra si adatta al
-            # contenuto e la barra di scorrimento sparisce, con qualsiasi
-            # scaling di Windows.
-            try:
-                delta = int(action.split(":", 1)[1])
-            except ValueError:
-                logger.warning("Delta fit non numerico: %r", action)
-                return
-            delta = max(-FIT_MAX_DELTA_PX, min(FIT_MAX_DELTA_PX, delta))
-            view_size["height"] = max(FIT_MIN_HEIGHT_PX, view_size["height"] + delta)
-            window.resize(view_size["width"], view_size["height"])
-            logger.info(
-                "Finestra adattata al contenuto: %+d px -> %dx%d.",
-                delta,
-                view_size["width"],
-                view_size["height"],
-            )
-        else:
-            logger.warning("Azione finestra sconosciuta: %r", action)
-
-    bus.on_window = _on_window
+    window_controller = WindowController(window, hidden=start_hidden)
+    bus.on_window = window_controller.handle
 
     # Tray: mostra/nascondi la finestra ed esci. Facoltativa: se pystray o
     # Pillow mancano l'app funziona comunque (chiudere = nascondere).
@@ -518,8 +572,7 @@ def cmd_app(args: argparse.Namespace) -> int:
         import pystray
 
         def _tray_show(_icon: object, _item: object) -> None:
-            window.show()
-            window.restore()
+            window_controller.handle("show")
 
         def _tray_quit(icon: object, _item: object) -> None:
             icon.stop()  # type: ignore[attr-defined]
