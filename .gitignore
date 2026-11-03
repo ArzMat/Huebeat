@@ -13,3 +13,16 @@ build/
 .spotify_tokens.json
 .bridges.json
 *.spec
+.venv-*/
+
+# Solo in locale: note di lavoro, test e materiali di prova
+CLAUDE.md
+AGENTS.md
+CHANGELOG.md
+tasks/
+.claude/
+*.bundle
+tests/
+ricerca-hue-music-sync.md
+scripts/diag_dtls.py
+assets/huebeat-src.png
